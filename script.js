@@ -17,6 +17,29 @@
     let artworkContainer;
     let viewer;
 
+    chrome.cookies.getAll({ name: 'cf_clearance', domain: 'artic.edu', partitionKey: {} }).then(async cookies => {
+        for (cookie of cookies) {
+            const rules = [{
+                id: 1,
+                priority: 1,
+                action: {
+                    type: 'modifyHeaders',
+                    requestHeaders: [
+                        { header: 'cookie', operation: 'append', value: `cf_clearance=${cookie.value}` }
+                    ]
+                },
+                condition: { urlFilter: '||artic.edu/', resourceTypes: ['image'] }
+            }];
+
+            await chrome.declarativeNetRequest.updateDynamicRules({
+                removeRuleIds: rules.map(rule => rule.id),
+                addRules: rules
+            });
+
+            break;
+        }
+    });
+
     document.addEventListener('DOMContentLoaded', function (event) {
         tombstoneElement = document.getElementById('tombstone');
         titleElement = document.getElementById('title');
